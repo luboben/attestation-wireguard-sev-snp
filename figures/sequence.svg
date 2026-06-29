@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 940" width="760" height="940" font-family="-apple-system, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#334155"></path>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="760" height="940" fill="#ffffff"></rect>
+
+  
+  <text x="20" y="32" font-size="13" font-weight="700" fill="#1f2937">Mesh bring-up: attestation → credential release</text>
+
+  
+  <rect x="20" y="176" width="720" height="314" rx="8" fill="#f7f8fa"></rect>
+  <rect x="20" y="614" width="720" height="202" rx="8" fill="#f7f8fa"></rect>
+  
+  <rect x="20" y="502" width="720" height="98" rx="8" fill="#eef1f4" stroke="#b4541e" stroke-width="1.5"></rect>
+
+  
+  <g font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" letter-spacing="0.4">
+    <rect x="20" y="164" width="332" height="22" rx="6" fill="#b4541e"></rect>
+    <text x="34" y="179" fill="#ffffff">PHASE 1 · ATTESTATION (ALL NODES IN PARALLEL)</text>
+    <rect x="20" y="602" width="312" height="22" rx="6" fill="#b4541e"></rect>
+    <text x="34" y="617" fill="#ffffff">PHASE 2 · CREDENTIAL RELEASE (PARALLEL)</text>
+  </g>
+
+  
+  <g stroke="#c4c9d0" stroke-width="1" stroke-dasharray="3 4">
+    <line x1="120" y1="100" x2="120" y2="905"></line>
+    <line x1="350" y1="100" x2="350" y2="905"></line>
+    <line x1="520" y1="100" x2="520" y2="905"></line>
+    <line x1="680" y1="100" x2="680" y2="905"></line>
+  </g>
+
+  
+  <g stroke="#334155" stroke-width="1.4" fill="none">
+    <line x1="350" y1="212" x2="123" y2="212" marker-end="url(#arw)"></line>
+    <line x1="120" y1="240" x2="347" y2="240" marker-end="url(#arw)"></line>
+    <line x1="350" y1="360" x2="123" y2="360" marker-end="url(#arw)"></line>
+    <line x1="123" y1="412" x2="520" y2="412" marker-start="url(#arw)" marker-end="url(#arw)"></line>
+    <line x1="123" y1="456" x2="677" y2="456" marker-start="url(#arw)" marker-end="url(#arw)"></line>
+    <line x1="120" y1="664" x2="347" y2="664" marker-end="url(#arw)"></line>
+    <line x1="120" y1="720" x2="517" y2="720" marker-end="url(#arw)"></line>
+    <line x1="120" y1="776" x2="677" y2="776" marker-end="url(#arw)"></line>
+  </g>
+
+  
+  <g>
+    <rect x="35" y="56" width="170" height="44" rx="8" fill="#b4541e14" stroke="#b4541e" stroke-width="1.5"></rect>
+    <text x="120" y="77" text-anchor="middle" font-size="13" font-weight="700" fill="#b4541e">Verifier</text>
+    <text x="120" y="92" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" fill="#b4541e">(Verifier + RP)</text>
+
+    <rect x="302" y="56" width="96" height="44" rx="8" fill="#f7f8fa" stroke="#cdd2da" stroke-width="1.5"></rect>
+    <text x="350" y="82" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2937">Node A</text>
+
+    <rect x="472" y="56" width="96" height="44" rx="8" fill="#f7f8fa" stroke="#cdd2da" stroke-width="1.5"></rect>
+    <text x="520" y="82" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2937">Node B</text>
+
+    <rect x="632" y="56" width="96" height="44" rx="8" fill="#f7f8fa" stroke="#cdd2da" stroke-width="1.5"></rect>
+    <text x="680" y="82" text-anchor="middle" font-size="13" font-weight="600" fill="#1f2937">Node C</text>
+  </g>
+
+  
+  <g>
+    <rect x="30" y="116" width="250" height="44" rx="6" fill="#f3f4f6" stroke="#d7dce2" stroke-width="1"></rect>
+    <text x="155" y="134" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" fill="#475569">AMD endorsements + reference values</text>
+    <text x="155" y="148" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" fill="#475569">pre-provisioned</text>
+  </g>
+
+  
+  <g>
+    <rect x="350" y="262" width="162" height="74" rx="6" fill="#ffffff" stroke="#cdd2da" stroke-width="1"></rect>
+    <rect x="350" y="262" width="4" height="74" fill="#9aa3af"></rect>
+    <g font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="8.5" fill="#334155">
+      <text x="362" y="280">generate WireGuard keypair;</text>
+      <text x="362" y="294">REPORT_DATA =</text>
+      <text x="368" y="308">· upper 32B nonce</text>
+      <text x="368" y="322">· lower 32B WG public key</text>
+    </g>
+  </g>
+
+  
+  <g font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">
+    <text x="235" y="206" text-anchor="middle" font-size="10.5" stroke="none" fill="#334155">request challenge</text>
+    <text x="235" y="234" text-anchor="middle" font-size="10.5" stroke="none" fill="#334155">nonce</text>
+    <text x="124" y="340" font-size="9.5" stroke="none" fill="#334155">attestation report + WG public key +</text>
+    <text x="124" y="353" font-size="9.5" stroke="none" fill="#334155">endpoint (pinned TLS)</text>
+
+    <text x="124" y="386" font-size="9.5" font-style="italic" stroke="none" fill="#6b7280">Node B and Node C — identical 4-step exchange, in parallel</text>
+    <text x="124" y="406" font-size="9.5" stroke="none" fill="#334155">B: gen keypair · request · nonce · report + WG pub + endpoint (pinned TLS)</text>
+    <text x="124" y="450" font-size="9.5" stroke="none" fill="#334155">C: gen keypair · request · nonce · report + WG pub + endpoint (pinned TLS)</text>
+
+    <text x="124" y="658" font-size="9.5" stroke="none" fill="#334155">to A → peers B,C: pubkeys, endpoints, allowed-IPs + PSK_AB, PSK_AC</text>
+    <text x="124" y="714" font-size="9.5" stroke="none" fill="#334155">to B → peers A,C + PSK_AB, PSK_BC</text>
+    <text x="124" y="770" font-size="9.5" stroke="none" fill="#334155">to C → peers A,B + PSK_AC, PSK_BC</text>
+  </g>
+
+  
+  <g text-anchor="middle">
+    <text x="380" y="525" font-size="12" font-weight="700" fill="#b4541e">VERIFIER BARRIER — verify all nodes</text>
+    <g font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="9.5" fill="#475569">
+      <text x="380" y="546">check ECDSA signature + AMD chain · appraise measurement, TCB, policy · match nonce</text>
+      <text x="380" y="562">confirm WG key binding · mint per-edge PSKs (AB, AC, BC)</text>
+    </g>
+  </g>
+
+  
+  <g>
+    <rect x="300" y="834" width="435" height="48" rx="6" fill="#f3f4f6" stroke="#d7dce2" stroke-width="1"></rect>
+    <text x="517" y="854" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" fill="#475569">each node configures peers locally →</text>
+    <text x="517" y="869" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10" fill="#475569">full WireGuard mesh established (3 tunnels)</text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="900" height="560" font-family="-apple-system, &#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="900" height="560" fill="#ffffff"></rect>
+
+  
+  
+  <line x1="182" y1="289" x2="260" y2="289" stroke="#334155" stroke-width="1.7"></line>
+  <line x1="380" y1="289" x2="458" y2="289" stroke="#334155" stroke-width="1.7"></line>
+  <path d="M122 328 C 122 414 518 414 518 328" fill="none" stroke="#334155" stroke-width="1.7"></path>
+
+  
+  <path d="M518 250 C 580 196 660 202 700 250" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6 5"></path>
+  <path d="M320 250 C 420 152 642 166 735 250" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6 5"></path>
+  <path d="M122 250 C 262 112 662 122 770 250" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6 5"></path>
+
+  
+  <line x1="765" y1="400" x2="765" y2="346" stroke="#b3bac4" stroke-width="1"></line>
+
+  
+  <g font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="11" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round">
+    <text x="221" y="304" stroke="none" fill="#475569">WireGuard</text>
+    <text x="419" y="304" stroke="none" fill="#475569">WireGuard</text>
+    <text x="320" y="405" stroke="none" fill="#475569">WireGuard</text>
+  </g>
+  <text x="775" y="376" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10.5" text-anchor="start" paint-order="stroke" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"><tspan stroke="none" fill="#8a93a0">VLEK cert chain</tspan></text>
+
+  
+  <rect x="40" y="131" width="557" height="339" rx="16" fill="none" stroke="#b3bac4" stroke-width="1.5" stroke-dasharray="6 5"></rect>
+  <rect x="50" y="135" width="100" height="14" fill="#ffffff"></rect>
+  <text x="60" y="146" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="12" letter-spacing="0.48" fill="#8a93a0">AWS eu-west-1</text>
+
+  
+  <g>
+    <rect x="62" y="250" width="120" height="78" rx="12" fill="#b4541e" fill-opacity="0.08" stroke="#b4541e" stroke-width="1.5"></rect>
+    <text x="122" y="291" text-anchor="middle" font-size="14" font-weight="600" fill="#b4541e">Node A</text>
+    <text x="122" y="308" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="11" fill="#5b6b69">SEV-SNP VM</text>
+  </g>
+  <g>
+    <rect x="260" y="250" width="120" height="78" rx="12" fill="#b4541e" fill-opacity="0.08" stroke="#b4541e" stroke-width="1.5"></rect>
+    <text x="320" y="291" text-anchor="middle" font-size="14" font-weight="600" fill="#b4541e">Node B</text>
+    <text x="320" y="308" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="11" fill="#5b6b69">SEV-SNP VM</text>
+  </g>
+  <g>
+    <rect x="458" y="250" width="120" height="78" rx="12" fill="#b4541e" fill-opacity="0.08" stroke="#b4541e" stroke-width="1.5"></rect>
+    <text x="518" y="291" text-anchor="middle" font-size="14" font-weight="600" fill="#b4541e">Node C</text>
+    <text x="518" y="308" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="11" fill="#5b6b69">SEV-SNP VM</text>
+  </g>
+
+  
+  <g>
+    <rect x="660" y="250" width="210" height="96" rx="12" fill="#f7f8fa" stroke="#cdd2da" stroke-width="1.5"></rect>
+    <text x="765" y="295" text-anchor="middle" font-size="14" font-weight="600" fill="#1f2937">Verifier + Relying Party</text>
+    <text x="765" y="313" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="11" fill="#6b7280">own hardware (UTM VM)</text>
+  </g>
+
+  
+  <g>
+    <rect x="690" y="400" width="150" height="50" rx="10" fill="#f7f8fa" stroke="#cdd2da" stroke-width="1.5"></rect>
+    <text x="765" y="423" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f2937">AMD KDS</text>
+    <text x="765" y="439" text-anchor="middle" font-family="ui-monospace, &#39;SF Mono&#39;, Menlo, Consolas, monospace" font-size="10.5" fill="#6b7280">(endorsements)</text>
+  </g>
+
+  
+  <g font-size="12" fill="#475569">
+    <rect x="40" y="497" width="22" height="14" rx="5" fill="#b4541e" fill-opacity="0.08" stroke="#b4541e" stroke-width="1.5"></rect>
+    <text x="70" y="508">Confidential node (attested)</text>
+
+    <line x1="248" y1="504" x2="278" y2="504" stroke="#334155" stroke-width="1.8"></line>
+    <text x="286" y="508">Data plane — WireGuard mesh</text>
+
+    <line x1="486" y1="504" x2="516" y2="504" stroke="#64748b" stroke-width="1.6" stroke-dasharray="4 3"></line>
+    <text x="524" y="508">Control plane — attestation</text>
+  </g>
+</svg>
