@@ -1,0 +1,5 @@
+# verifier.py (runs on the verifier VM)
+Flask>=3.0
+
+# attest_client.py (runs on each SEV-SNP node)
+requests>=2.31

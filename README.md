@@ -7,7 +7,9 @@ once all nodes pass does it hand out the WireGuard credentials that let the mesh
 come up. The result is a network whose members are cryptographically known to be
 genuine, unmodified confidential VMs.
 
-<!-- TODO: one-line status (course, term) and a link to the source repo if any. -->
+*Systemsicherheit · Hochschule Flensburg · SS 2026 · Prof. Dr.-Ing. Sebastian Gajek*
+
+Source: <https://github.com/luboben/attestation-wireguard-sev-snp>
 
 ---
 
@@ -282,8 +284,15 @@ sudo wg-quick up wg0
 sudo wg show          # confirm handshakes with both peers
 ```
 
-<!-- TODO: link the attestation client script once written; document its config
-     (verifier URL, pinned certificate). It wraps steps 4-8. -->
+Steps 4–8 are implemented by `attest_client.py`. Run it on each node (it pins the
+verifier certificate as its sole trusted CA):
+
+```bash
+python3 attest_client.py \
+  --verifier https://<verifier-hostname> --verifier-cert verifier.crt \
+  --node-id A --endpoint <public-ip>:51820 \
+  --snpguest-dir snpguest/target/release --bring-up
+```
 
 ### 5.4 WireGuard config (template, Node A shown)
 
@@ -380,7 +389,15 @@ the UTM VM and give it a stable name via dynamic DNS; nodes connect outbound to
 `https://<verifier-hostname>/v1/...`. The verifier is never a WireGuard peer —
 that would be a chicken-and-egg with the mesh it gates.
 
-<!-- TODO: link the verifier source once written; note where verifier.crt is pinned on nodes. -->
+Implemented by `verifier.py` (Flask). Fill the reference values in its `CONFIG`
+(§5.6), then run it on the UTM VM:
+
+```bash
+pip install -r requirements.txt
+python3 verifier.py     # serves HTTPS on :443 using verifier.crt / verifier.key
+```
+
+<!-- TODO: note on each node where verifier.crt is pinned (path passed to --verifier-cert). -->
 
 ### 5.6 Reference values
 
@@ -402,11 +419,14 @@ two steps:
    it honestly as a **trust-on-first-use (TOFU) baseline** from observed stable
    launches.
 
-A TOFU baseline detects drift from the first observed launch (a changed image or
-firmware) but does not by itself prove the baseline corresponds to known-good
-source; note this in §6. Expect the baseline to change legitimately when AWS
-updates the underlying OVMF, so treat a mismatch as "investigate", not
-automatically "attack". <!-- TODO: record the actual measurement and which path succeeded. -->
+Which path applies is decided by the practical run. If reconstruction succeeds,
+the golden measurement stands on its own and no caveat is needed. If it falls
+back to a TOFU baseline, that is a real limitation — it detects drift from the
+first observed launch (a changed image or firmware) but does not by itself prove
+the baseline corresponds to known-good source — and should then be recorded in
+§6. Either way, expect the baseline to change legitimately when AWS updates the
+underlying OVMF, so treat a mismatch as "investigate", not automatically
+"attack". <!-- TODO: record the actual measurement and which path succeeded; add the §6 caveat only if reconstruction failed. -->
 
 **TCB minimums** — the reported TCB has four components (bootloader, TEE, SNP
 firmware, microcode). Set a minimum acceptable version for each and reject any
