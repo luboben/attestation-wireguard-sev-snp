@@ -419,27 +419,36 @@ two steps:
    it honestly as a **trust-on-first-use (TOFU) baseline** from observed stable
    launches.
 
-Which path applies is decided by the practical run. If reconstruction succeeds,
-the golden measurement stands on its own and no caveat is needed. If it falls
-back to a TOFU baseline, that is a real limitation — it detects drift from the
-first observed launch (a changed image or firmware) but does not by itself prove
-the baseline corresponds to known-good source — and should then be recorded in
-§6. Either way, expect the baseline to change legitimately when AWS updates the
-underlying OVMF, so treat a mismatch as "investigate", not automatically
-"attack". <!-- TODO: record the actual measurement and which path succeeded; add the §6 caveat only if reconstruction failed. -->
+On this lab's AWS platform the second step is **not achievable**: `sev-snp-measure`
+runs, but the OVMF firmware that the launch measurement covers is AWS-provided and
+not exposed to the guest, so the input needed for an exact recomputation is
+unavailable. The golden measurement is therefore a **trust-on-first-use (TOFU)
+baseline** — but a well-supported one: the same 48-byte value
+(`507e82d2…a15f`) was observed across two launches five weeks apart, with two
+stop/start cycles in between. The honest consequence is recorded in §6: a TOFU
+baseline detects drift from that baseline (a changed image or firmware) but does
+not by itself prove the baseline corresponds to known-good source. Expect it to
+change legitimately when AWS updates the underlying OVMF, so treat a mismatch as
+"investigate", not automatically "attack".
+
+The values appraised against, captured on a c6a.large (Milan, ABI 1.58.1) in
+eu-west-1 and pinned in the verifier's `CONFIG`:
+
+- **Golden measurement:** `507e82d27ea5b951dd765a3eb31ba5f582673b301d6983ded482d3feb066cb68979f1f11fede97687374d3a25002a15f`
+- **Report version:** 5
+- **TCB minimums (anti-rollback floor):** bootloader 4, TEE 0, SNP 29, microcode 222
+- **Policy:** `0x2030000` (debug disabled, SMT allowed, page-swap-disable set)
 
 **TCB minimums** — the reported TCB has four components (bootloader, TEE, SNP
-firmware, microcode). Set a minimum acceptable version for each and reject any
-report with a component below it; this is anti-rollback against known-vulnerable
-firmware. Read the current platform TCB from a known-good report and set the
-minimums there (or AMD's recommended floor); they should track upward as AWS
-patches the platform. <!-- TODO: record the four minimum versions. -->
+firmware, microcode). Each is a minimum acceptable version and any report with a
+component below it is rejected; this is anti-rollback against known-vulnerable
+firmware. The floor above is the platform's current TCB; it should track upward
+as AWS patches the platform.
 
 **Policy flags** — the report's `policy` field encodes the guest policy fixed at
-launch. The security-relevant expectation is debug disabled; the remaining bits
-(SMT, migration-agent association, minimum ABI major/minor) are checked against
-expected values per the ABI policy definition. Reject anything that does not
-match. <!-- TODO: pin the exact expected policy value/bitmask. -->
+launch. The verifier pins the exact value `0x2030000`; the security-relevant bit
+is debug disabled, alongside SMT allowed, migration-agent association off, and
+page-swap-disable set. Anything that does not match is rejected.
 
 ## 6. Trust assumptions and limitations
 
@@ -449,6 +458,11 @@ match. <!-- TODO: pin the exact expected policy value/bitmask. -->
   MAA in an SGX enclave) attest the verifier itself; this lab does not.
 - **Launch-time, not runtime.** Attestation proves the state at launch. It does
   not detect later in-memory compromise.
+- **Golden measurement is a TOFU baseline.** On AWS the launch measurement cannot
+  be independently reconstructed (the measured OVMF is AWS-provided and not
+  exposed), so the expected value is trusted on first use — here, a value stable
+  across two launches. This detects drift from that baseline but does not prove
+  the baseline itself corresponds to known-good source (see §5.6).
 - **CSP in the TCB.** AWS reports are VLEK-signed, so AWS is trusted for key
   provisioning.
 - **All node identities are attested.** With mutual attestation there is no

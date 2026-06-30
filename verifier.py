@@ -36,10 +36,12 @@ CONFIG = {
     "listen_port": 51820,
 
     # Reference values (README 5.6) -- capture these from a known-good report.
-    "golden_measurement_hex": "TODO_96_HEX_CHARS",          # 48 bytes
-    "min_tcb": {"bootloader": 0, "tee": 0, "snp": 0, "microcode": 0},  # TODO
-    "expected_policy": None,        # TODO: u64 from a known-good report; None = skip exact check
-    "expected_version": 2,
+    # 48-byte launch measurement; stable across launches on 2026-05-28 and 2026-06-29 (5.6).
+    "golden_measurement_hex": "507e82d27ea5b951dd765a3eb31ba5f582673b301d6983ded482d3feb066cb68979f1f11fede97687374d3a25002a15f",
+    # Observed on AWS c6a.large (Milan, ABI 1.58.1); stable across two launches.
+    "min_tcb": {"bootloader": 4, "tee": 0, "snp": 29, "microcode": 222},  # anti-rollback floor
+    "expected_policy": 0x2030000,   # debug off, SMT on, page-swap-disable on; exact match
+    "expected_version": 5,          # observed report version on this platform (was assumed 2)
 
     # snpguest delegation
     "snpguest": "snpguest",         # path to the binary on the verifier VM
