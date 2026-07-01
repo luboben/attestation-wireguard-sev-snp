@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets and runtime artifacts -- never commit these
+verifier.crt
+verifier.key
+*.pem
+*.key
+wg0.conf
+wg_private.key
+wg_public.key
+request-data.bin
+report.bin

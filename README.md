@@ -7,7 +7,7 @@ once all nodes pass does it hand out the WireGuard credentials that let the mesh
 come up. The result is a network whose members are cryptographically known to be
 genuine, unmodified confidential VMs.
 
-*Systemsicherheit · Hochschule Flensburg · SS 2026 · Prof. Dr.-Ing. Sebastian Gajek*
+*Systemsicherheit · Hochschule Flensburg · SS 2026 · Prof. Dr. Sebastian Gajek*
 
 Source: <https://github.com/luboben/attestation-wireguard-sev-snp>
 
@@ -21,33 +21,28 @@ debug build, or an outdated firmware and still present a valid key. For a
 confidential workload that is exactly the gap we want to close.
 
 AMD SEV-SNP lets a VM produce a hardware-signed **attestation report**: a
-measurement of its initial memory and vCPU state, signed by a key that chains
+measurement of its initial memory and CPU state, signed by a key that chains
 back to an AMD root of trust. Verifying that report before admitting a node to
 the mesh means the network is built only from nodes that are (a) genuine SEV-SNP
 hardware and (b) running the exact image we expect. Binding each node's WireGuard
 key into its report ties the encrypted channel to the attested machine, so the
 tunnel inherits the trust established by attestation.
 
-Two honest limits stated up front: attestation here proves the **launch-time**
-state, not that the node stays uncompromised at runtime; and because AWS reports
-are VLEK-signed, the cloud provider is part of the trusted computing base.
-
 ## 2. Roles (RATS / RFC 9334)
 
 This system is symmetric: every node is an Attester. The verifier combines two
 RATS roles in one service — it both appraises evidence (Verifier) and decides to
 release the credentials (Relying Party). That combined service is essentially a
-minimal, single-purpose Key Broker; the productized equivalents are the CoCo
-Trustee KBS/AS split or Azure MAA plus Key Vault Secure Key Release.
+minimal, single-purpose Key Broker.
 
 | RATS role             | Filled by                                  | Note |
 |-----------------------|--------------------------------------------|------|
 | Attester              | each of the 3 SEV-SNP nodes                | mutual attestation; all three prove themselves |
 | Verifier              | verification service (own hardware)        | appraises every report |
-| Relying Party         | same service (personal union)              | releases WireGuard credentials |
+| Relying Party         | same service              | releases WireGuard credentials |
 | Endorser              | AMD (ARK → ASVK → VLEK)                     | hardware authenticity |
-| Reference Value Prov. | self-supplied                              | golden measurement, TCB minimums, policy flags |
-| Verifier Owner        | implicitly the operator                    | no separate appraisal authority |
+| Reference Value Provider | self-supplied                              | golden measurement, TCB minimums, policy flags |
+| Verifier Owner        | the operator                    | no separate appraisal authority |
 
 <!--
   Mutual attestation is what removed the earlier asymmetry: there is no longer a
@@ -78,15 +73,13 @@ each node's peer set.
 
 ![Attestation Sequence: parallel node attestation, a verifier barrier, then credential release and full mesh bring-up.](figures/sequence.svg)
 
-Key binding uses the split REPORT_DATA layout: upper 32 bytes carry the verifier
+Key binding uses a split REPORT_DATA layout: upper 32 bytes carry the verifier
 nonce (freshness), lower 32 bytes carry the raw X25519 WireGuard public key
 (binding). Both halves sit under the same ECDSA signature.
 
 ---
 
 ## 5. Configuration
-
-<!-- This is the core of the README. Fill the TODOs with real values as you build. -->
 
 ### 5.1 Attestation interface (REST contract)
 
@@ -114,7 +107,7 @@ notes).
 {
   "session_id":    "9f2c…",
   "report":        "<base64 of the raw SEV-SNP attestation report>",
-  "cert_chain":    "<base64 PEM bundle VLEK -> ASVK -> ARK>",
+  "cert_chain":    "<base64 of the VLEK leaf cert (PEM); verifier fetches ARK+ASVK from the AMD KDS>",
   "wg_public_key": "<base64, 32 bytes, raw X25519>",
   "endpoint":      "203.0.113.10:51820"
 }
@@ -152,8 +145,7 @@ verifier cross-checks both halves against the issued nonce and the
 The barrier lives here: `/attest` returns as soon as *this* node is appraised,
 but credentials are withheld until every expected node has passed. Nodes poll
 this endpoint until it returns `ready`. Because nodes initiate outbound (the
-verifier is behind NAT, §3), polling fits the connection direction; long-polling
-is an alternative that trades fewer round-trips for held-open connections.
+verifier is behind NAT, §3), polling fits the connection direction.
 
 Three points worth stating explicitly:
 
@@ -173,12 +165,19 @@ Three points worth stating explicitly:
 
 ### 5.2 Prerequisites
 
-- AWS region: eu-west-1. <!-- TODO: confirm account limits / SEV-SNP enabled -->
-- Instance type: c6a.large (or other SEV-SNP-capable type). <!-- TODO -->
-- AMI: Ubuntu 24.04+ with SEV-SNP support, uefi boot mode. <!-- TODO: AMI ID -->
-- Security group: allow inbound UDP on the WireGuard port between the three node
-  public IPs; allow the nodes outbound 443 to the verifier. <!-- TODO: SG IDs -->
-- Tunnel address plan: 10.0.0.1/2/3 within 10.0.0.0/24. <!-- TODO: confirm -->
+Concrete values from the reference run (eu-west-1):
+
+- **Region:** eu-west-1 (one of two AWS regions offering SEV-SNP).
+- **Instance type:** c6a.large (3rd-gen EPYC "Milan"; any SEV-SNP-capable
+  c6a/m6a/r6a type works).
+- **Base AMI:** Ubuntu 24.04, UEFI boot, `ami-07dcad2e028cc44c9`. After the
+  one-time node setup (§5.3) it pays to bake a **custom AMI** with snpguest
+  pre-built, so further nodes start in seconds instead of rebuilding (§7).
+- **Security group:** SSH (TCP 22) inbound from the operator; WireGuard
+  (UDP 51820) inbound **from the nodes' public IPs**; outbound to the verifier's
+  HTTPS port. The mesh uses the nodes' *public* IPs as WireGuard endpoints, so a
+  self-referencing (VPC-internal) rule is not sufficient (§7).
+- **Tunnel address plan:** 10.0.0.1 / .2 / .3 within 10.0.0.0/24.
 
 ### 5.3 Node setup (per SEV-SNP VM)
 
@@ -189,15 +188,15 @@ steps 4–8 are what the attestation client automates.
 
 **1. Launch with SEV-SNP enabled.** It can only be turned on at launch and cannot
 be disabled afterwards. Use a supported type (c6a/m6a/r6a) in a supported region
-(`eu-west-1` or `us-east-2`) with a UEFI-boot Ubuntu 24.04 AMI.
+(e.g. `eu-west-1`) with a UEFI-boot Ubuntu 24.04 AMI.
 
 ```bash
 aws ec2 run-instances \
-  --image-id <ubuntu-24.04-ami> \        # TODO: AMI ID in eu-west-1, uefi boot mode
+  --image-id <ubuntu-24.04-ami> \        # Ubuntu 24.04 UEFI AMI, e.g. ami-07dcad2e028cc44c9 (§5.2)
   --instance-type c6a.large \
-  --key-name <key-pair> \               # TODO
-  --subnet-id <subnet-id> \             # TODO
-  --security-group-ids <sg-id> \        # TODO: UDP 51820 between nodes; outbound 443 to verifier
+  --key-name <key-pair> \               # your EC2 key pair
+  --subnet-id <subnet-id> \             # optional; omit to use the default subnet
+  --security-group-ids <sg-id> \        # UDP 51820 between node public IPs; outbound to verifier (§5.2)
   --cpu-options AmdSevSnp=enabled
 
 # confirm it took effect (AmdSevSnp should read "enabled"):
@@ -205,13 +204,17 @@ aws ec2 describe-instances --instance-ids <id> \
   --query 'Reservations[].Instances[].CpuOptions'
 ```
 
-**2. Install WireGuard and build snpguest.**
+**2. Install WireGuard and build snpguest.** On a small instance (c6a.large has
+4 GB RAM, no swap, and an 8 GB root disk) set `OPENSSL_NO_VENDOR=1` so snpguest
+links the system OpenSSL instead of compiling a vendored copy — the vendored
+build is what otherwise exhausts memory and disk (§7).
 
 ```bash
-sudo apt update && sudo apt install -y wireguard build-essential
-sudo snap install rustup --classic && rustup default stable
-git clone https://github.com/virtee/snpguest.git
-cd snpguest && cargo build -r          # ~12 min; binary at target/release/snpguest
+sudo apt update && sudo apt install -y wireguard build-essential pkg-config libssl-dev
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+git clone https://github.com/virtee/snpguest.git && cd snpguest
+OPENSSL_NO_VENDOR=1 cargo build -r     # ~3 min; binary at target/release/snpguest
 ```
 
 **3. Generate the WireGuard keypair** inside the VM. The private key never leaves
@@ -245,14 +248,10 @@ sudo ./snpguest report report.bin /path/to/request-data.bin   # no --random
 sudo ./snpguest certificates pem ./                           # extracts host-provided vlek.pem
 ```
 
-Fetch the VLEK certificate chain from the AMD KDS. `Milan` is the 3rd-gen EPYC
-codename that c6a uses; a Genoa-based type would use a different path.
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf \
-  https://kdsintf.amd.com/vlek/v1/Milan/cert_chain -o cert_chain.pem
-cat vlek.pem cert_chain.pem > chain.pem      # VLEK -> ASVK -> ARK, for submission
-```
+The node submits only this host-provided **VLEK leaf** (`vlek.pem`). It does not
+fetch ARK/ASVK itself — the verifier pulls them from the AMD KDS and validates the
+chain to the AMD root it trusts (§5.1). `Milan` is the 3rd-gen EPYC codename c6a
+uses; a Genoa-based type would report a different one.
 
 Optional local sanity check (the real appraisal is the verifier's job):
 
@@ -260,8 +259,8 @@ Optional local sanity check (the real appraisal is the verifier's job):
 sudo ./snpguest verify attestation ./ report.bin
 ```
 
-**6. Submit evidence** (§5.1, endpoint 2). Base64-encode `report.bin` and
-`chain.pem`, send them with the public key and this node's WireGuard endpoint
+**6. Submit evidence** (§5.1, endpoint 2). Base64-encode `report.bin` and the VLEK
+leaf `vlek.pem`, send them with the public key and this node's WireGuard endpoint
 (public IP:port):
 
 ```text
@@ -285,13 +284,15 @@ sudo wg show          # confirm handshakes with both peers
 ```
 
 Steps 4–8 are implemented by `attest_client.py`. Run it on each node (it pins the
-verifier certificate as its sole trusted CA):
+verifier certificate as its sole trusted CA). Use `sudo`: the client shells out to
+`sudo snpguest`, writes `/etc/wireguard/wg0.conf`, and runs `wg-quick up`. Under
+sudo `~` is root's home, so pass an absolute `--snpguest-dir`.
 
 ```bash
-python3 attest_client.py \
-  --verifier https://<verifier-hostname> --verifier-cert verifier.crt \
+sudo python3 attest_client.py \
+  --verifier https://<verifier-hostname>:8443 --verifier-cert verifier.crt \
   --node-id A --endpoint <public-ip>:51820 \
-  --snpguest-dir snpguest/target/release --bring-up
+  --snpguest-dir /home/ubuntu/snpguest/target/release --bring-up
 ```
 
 ### 5.4 WireGuard config (template, Node A shown)
@@ -303,7 +304,7 @@ PSKs are generated/received at runtime and are **never committed to the repo**.
 [Interface]
 PrivateKey = <generated inside the VM, never leaves it>
 Address    = 10.0.0.1/24
-ListenPort = 51820        # TODO: confirm port (must match security group)
+ListenPort = 51820        # must match the security-group UDP port
 
 [Peer]   # Node B
 PublicKey    = <wg_pub_B from verifier>
@@ -384,20 +385,21 @@ openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
   -subj "/CN=<verifier-hostname>" -addext "subjectAltName=DNS:<verifier-hostname>"
 ```
 
-**Reachability.** The verifier is outside AWS, behind NAT (§3). Forward port 443 to
-the UTM VM and give it a stable name via dynamic DNS; nodes connect outbound to
-`https://<verifier-hostname>/v1/...`. The verifier is never a WireGuard peer —
-that would be a chicken-and-egg with the mesh it gates.
+**Reachability.** The verifier is outside AWS, behind NAT (§3). Give it a stable
+name (dynamic DNS, or a manual A-record for a single session) and forward its
+HTTPS port through the router to the VM; nodes connect outbound to
+`https://<verifier-hostname>:<port>/v1/...`. The verifier is never a WireGuard
+peer — that would be a chicken-and-egg with the mesh it gates. The reference run
+used port 8443 so the service binds without root, with the router forwarding the
+public 8443 to it.
 
 Implemented by `verifier.py` (Flask). Fill the reference values in its `CONFIG`
-(§5.6), then run it on the UTM VM:
+(§5.6), then run it on the VM:
 
 ```bash
 pip install -r requirements.txt
-python3 verifier.py     # serves HTTPS on :443 using verifier.crt / verifier.key
+python3 verifier.py     # serves HTTPS on CONFIG["bind"] using verifier.crt / verifier.key
 ```
-
-<!-- TODO: note on each node where verifier.crt is pinned (path passed to --verifier-cert). -->
 
 ### 5.6 Reference values
 
@@ -424,8 +426,10 @@ runs, but the OVMF firmware that the launch measurement covers is AWS-provided a
 not exposed to the guest, so the input needed for an exact recomputation is
 unavailable. The golden measurement is therefore a **trust-on-first-use (TOFU)
 baseline** — but a well-supported one: the same 48-byte value
-(`507e82d2…a15f`) was observed across two launches five weeks apart, with two
-stop/start cycles in between. The honest consequence is recorded in §6: a TOFU
+(`507e82d2…a15f`) was observed across two launches five weeks apart (with two
+stop/start cycles in between) and again from a custom AMI — confirming the
+measurement is bound to the AWS-provided OVMF, not to the AMI's disk contents.
+The honest consequence is recorded in §6: a TOFU
 baseline detects drift from that baseline (a changed image or firmware) but does
 not by itself prove the baseline corresponds to known-good source. Expect it to
 change legitimately when AWS updates the underlying OVMF, so treat a mismatch as
@@ -470,12 +474,31 @@ page-swap-disable set. Anything that does not match is rejected.
 - **Bootstrap.** Reference values and the verifier's reachability are
   pre-provisioned/assumed. Availability and DoS are out of scope.
 
-## 7. References
+## 7. Lessons learned
 
-<!-- TODO: tidy into a consistent style. -->
+These came up from actually building and running the system. The kind of problems that are invisible in planning but become problems during the practice.
+
+- **Building snpguest on a small instance.** c6a.large has 4 GB RAM and no swap,
+  and the stock Ubuntu root disk is 8 GB. snpguest's dependency tree vendors and
+  compiles OpenSSL from C source, which exhausted first memory (the instance shut
+  *itself* down — `Client.InstanceInitiatedShutdown`, an OOM, not an AWS action)
+  and then disk (`No space left on device`). `OPENSSL_NO_VENDOR=1` links the
+  system OpenSSL and sidesteps both; adding swap fixes the memory side alone.
+  Building once and capturing a custom AMI removes the problem for further nodes.
+- **The measurement is OVMF-bound, not AMI-bound.** A node launched from the
+  custom AMI produced the same launch measurement as one from the stock AMI —
+  consistent with AWS measuring its own early-boot OVMF before the AMI loads, and
+  the reason the golden measurement stays stable across images (§5.6, §6).
+- **Mesh endpoints are public IPs.** The verifier hands each node its *public* IP
+  as the WireGuard endpoint, so peer traffic leaves and re-enters through the
+  internet gateway. A self-referencing security-group rule matches only
+  VPC-internal source IPs and is therefore not enough; UDP 51820 must be allowed
+  from the nodes' public IPs. Until that rule existed, every config was correct
+  but no handshake completed.
+
+## 8. References
 
 - RFC 9334 — Remote ATtestation procedureS (RATS) Architecture
 - AMD — SEV Secure Nested Paging Firmware ABI Specification (Pub. 56860)
 - J. A. Donenfeld — WireGuard: Next Generation Kernel Network Tunnel (NDSS 2017)
 - AWS — Attest an Amazon EC2 instance with AMD SEV-SNP (EC2 User Guide)
-- Related work — CoCo Trustee (KBS/AS), Azure MAA + Key Vault Secure Key Release

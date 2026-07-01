@@ -258,7 +258,11 @@ def credentials():
         if sess["status"] != "verified":
             return jsonify(status="rejected", reason="not_verified"), 409
         if not _barrier_ready():
-            verified = sum(1 for s in _sessions.values() if s["status"] == "verified")
+            # Count DISTINCT verified slots, not sessions -- otherwise three nodes
+            # all claiming slot "A" would misleadingly report 3/3 while the barrier
+            # (which keys on node_id) never releases. See README section 7.
+            verified = len({s["node_id"] for s in _sessions.values()
+                            if s["status"] == "verified"})
             return jsonify(status="pending", verified=verified,
                            expected=len(CONFIG["nodes"])), 202
         node_id = sess["node_id"]
